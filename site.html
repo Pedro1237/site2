@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roteirização de Trajeto e Dicas de Segurança</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        #route-form {
+            padding: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label, input {
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #map-container {
+            margin-top: 20px;
+            position: relative;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        #arrival-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        #voice-button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Roteirização de Trajeto e Dicas de Segurança</h1>
+    </header>
+    <main>
+        <section id="route-form">
+            <h2>Insira os endereços de partida e destino:</h2>
+            <form>
+                <label for="start">Endereço de Partida:</label>
+                <input type="text" id="start" placeholder="Digite o endereço de partida" required>
+                
+                <label for="end">Endereço de Destino:</label>
+                <input type="text" id="end" placeholder="Digite o endereço de destino" required>
+                
+                <button type="button" id="calculate-route">Iniciar Trajeto</button>
+            </form>
+        </section>
+        
+        <section id="map-container">
+            <div id="map"></div>
+            <div id="arrival-info">
+                <h2>Previsão de Chegada:</h2>
+                <p id="arrival-time"></p>
+            </div>
+        </section>
+    </main>
+    
+    <button id="voice-button">Iniciar Reconhecimento de Voz</button>
+    
+    <script>
+        let map;
+        let directionsService;
+        let directionsDisplay;
+        let synthesis;
+        let recognition;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: { lat: -23.550520, lng: -46.633308 },
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsDisplay = new google.maps.DirectionsRenderer();
+            directionsDisplay.setMap(map);
+        }
+
+        document.getElementById('calculate-route').addEventListener('click', calculateRoute);
+        document.getElementById('voice-button').addEventListener('click', speakSafetyTips);
+
+        function calculateRoute() {
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+
+            const request = {
+                origin: start,
+                destination: end,
+                travelMode: 'DRIVING'
+            };
+
+            directionsService.route(request, function(result, status) {
+                if (status == 'OK') {
+                    directionsDisplay.setDirections(result);
+                    
+                    const arrivalTime = result.routes[0].legs[0].duration.text;
+                    document.getElementById('arrival-time').textContent = `Previsão de Chegada: ${arrivalTime}`;
+                } else {
+                    alert('Não foi possível calcular a rota: ' + status);
+                }
+            });
+        }
+
+        function speakSafetyTips() {
+            synthesis = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance("Lembre-se de dirigir com segurança e obedecer às leis de trânsito.");
+            synthesis.speak(utterance);
+        }
+
+        // Inicialização do reconhecimento de voz
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+
+        recognition.onresult = function(event) {
+            const speechResult = event.results[0][0].transcript;
+            alert('Você disse: ' + speechResult);
+        };
+
+        recognition.onerror = function(event) {
+            alert('Erro de reconhecimento de voz: ' + event.error);
+        };
+
+        recognition.onend = function() {
+            alert('Reconhecimento de voz encerrado.');
+        };
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBrFztJyTD5mH-UqSd8-fmWfx2kNzWbjio&callback=initMap"></script>
+</body>
+</html>
